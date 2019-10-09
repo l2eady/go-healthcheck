@@ -26,12 +26,11 @@ func New(maxTimeOut time.Duration) Checker {
 
 func (checker checkerImpl) Ping(url string) (ok bool, err error) {
 	checker.Caller.SetURL(url)
-	if _, err = checker.Caller.GET(); err == nil {
-		ok = true
-		fmt.Printf("Ping to %s successfuly\n", url)
+	if _, err = checker.Caller.GET(); err != nil {
+		fmt.Printf("Ping to %s failed\n", url)
 		return
 	}
-	fmt.Printf("Ping to %s failed\n", url)
-
-	return ok, err
+	ok = true
+	fmt.Printf("Ping to %s successfuly\n", url)
+	return
 }
