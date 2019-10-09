@@ -7,15 +7,15 @@ import (
 	"time"
 )
 
-type Checker interface {
+type CheckerService interface {
 	Ping(url string) (bool, error)
 }
-type checkerImpl struct {
+type checkerServiceImpl struct {
 	Caller lhttp.HttpCaller
 }
 
-func New(maxTimeOut time.Duration) Checker {
-	return &checkerImpl{
+func New(maxTimeOut time.Duration) CheckerService {
+	return &checkerServiceImpl{
 		Caller: &lhttp.Caller{
 			Body:   nil,
 			Header: map[string]string{},
@@ -24,7 +24,7 @@ func New(maxTimeOut time.Duration) Checker {
 	}
 }
 
-func (checker checkerImpl) Ping(url string) (ok bool, err error) {
+func (checker checkerServiceImpl) Ping(url string) (ok bool, err error) {
 	checker.Caller.SetURL(url)
 	if _, err = checker.Caller.GET(); err != nil {
 		fmt.Printf("Ping to %s failed\n", url)
