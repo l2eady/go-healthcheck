@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-healthcheck/internal/app/models"
 	"sync"
+	"time"
 )
 
 type pool struct {
@@ -17,11 +18,13 @@ type pool struct {
 
 func (h *healthyCheckServiceImpl) NewPool(maxGoRoutines int) *pool {
 	return &pool{
-		Done:                make(chan bool),
-		ChannelJob:          make(chan models.HealthyCheckRequest, maxGoRoutines),
-		ChanelResult:        make(chan models.HealthyCheckResponse, maxGoRoutines),
-		maxGoRoutines:       maxGoRoutines,
-		Result:              &models.HealthyCheckReport{},
+		Done:          make(chan bool),
+		ChannelJob:    make(chan models.HealthyCheckRequest, maxGoRoutines),
+		ChanelResult:  make(chan models.HealthyCheckResponse, maxGoRoutines),
+		maxGoRoutines: maxGoRoutines,
+		Result: &models.HealthyCheckReport{
+			StartAt: time.Now(),
+		},
 		HealthyCheckService: h,
 	}
 }

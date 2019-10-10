@@ -3,7 +3,7 @@ package healthycheck
 import (
 	"errors"
 	"fmt"
-	"go-healthcheck/configs"
+	"go-healthcheck/internal/app"
 	"go-healthcheck/internal/app/lhttp/mocks"
 	"go-healthcheck/internal/app/models"
 	"strings"
@@ -48,7 +48,7 @@ func TestReadCSVExpectPingSuccessReturnReportSuccess(t *testing.T) {
 	url := "https://linecorp.com"
 	data := fmt.Sprintf(`%s,line company`, url)
 	reader := strings.NewReader(data)
-	mockConf := &configs.Configs{}
+	mockConf := &app.Configs{}
 	mockCaller := &mocks.MockLHTTPCaller{MockGETReturnErr: nil}
 	checker := healthyCheckServiceImpl{Caller: mockCaller,
 		Conf: mockConf}
@@ -72,7 +72,7 @@ func TestReadCSVExpectPingSuccessReturnReportSuccess(t *testing.T) {
 }
 
 func TestSendReportExpectSendFailedReturnFailed(t *testing.T) {
-	mockConf := &configs.Configs{}
+	mockConf := &app.Configs{}
 	expectErr := errors.New("http request timeout")
 	mockCaller := &mocks.MockLHTTPCaller{MockGETReturnErr: nil, MockPOSTReturnErr: expectErr}
 	checker := healthyCheckServiceImpl{Caller: mockCaller,
@@ -90,7 +90,7 @@ func TestReadCSVExpectPingFailedReturnReportFailed(t *testing.T) {
 	data := fmt.Sprintf(`%s,line company`, url)
 	reader := strings.NewReader(data)
 	mockCaller := &mocks.MockLHTTPCaller{MockGETReturnErr: errors.New("request timeout")}
-	mockConf := &configs.Configs{}
+	mockConf := &app.Configs{}
 	checker := healthyCheckServiceImpl{Caller: mockCaller, Conf: mockConf}
 
 	report := checker.HealthyCheckEndPointFromCSVFile(reader, 1)
@@ -116,7 +116,7 @@ func TestReadCSVExpectReadErrorReturnReport(t *testing.T) {
 	data := fmt.Sprintf(`%s,line "company`, url)
 	reader := strings.NewReader(data)
 	mockCaller := &mocks.MockLHTTPCaller{MockGETReturnErr: nil}
-	mockConf := &configs.Configs{}
+	mockConf := &app.Configs{}
 	checker := healthyCheckServiceImpl{Caller: mockCaller, Conf: mockConf}
 	report := checker.HealthyCheckEndPointFromCSVFile(reader, 1)
 	expectTotalData := 0

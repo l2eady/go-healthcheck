@@ -4,7 +4,7 @@ package main
 
 import (
 	"flag"
-	"go-healthcheck/configs"
+	"go-healthcheck/internal/app"
 	"go-healthcheck/internal/app/healthycheck"
 	"log"
 	"os"
@@ -20,11 +20,11 @@ func main() {
 	state := flag.String("state", "local", "set working environment")
 	configPath := flag.String("config", "configs", "set configs path, default as: 'configs'")
 	fileName := flag.String("filename", "example.csv", "csv filename for healthycheck")
-	pingTimeOut := flag.Int64("ping_timeout_in_second", 2, "http timeout for ping")
+	pingTimeOut := flag.Int64("ping_timeout_in_second", 3, "http timeout for ping")
 	maxWorker := flag.Int("max_worker", 50, "maximum of worker for ping service")
 	flag.Parse()
 
-	conf, err := configs.New(*configPath, *state)
+	conf, err := app.New(*configPath, *state)
 	if err != nil {
 		log.Panicf("failed to load config, err: %v", err)
 	}

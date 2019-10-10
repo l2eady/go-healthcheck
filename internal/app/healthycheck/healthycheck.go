@@ -1,8 +1,9 @@
 package healthycheck
 
 import (
+	"crypto/tls"
 	"encoding/csv"
-	"go-healthcheck/configs"
+	"go-healthcheck/internal/app"
 	"go-healthcheck/internal/app/lhttp"
 	"go-healthcheck/internal/app/models"
 	"io"
@@ -17,16 +18,20 @@ type HealthyCheckService interface {
 }
 type healthyCheckServiceImpl struct {
 	Caller lhttp.HttpCaller
-	Conf   *configs.Configs
+	Conf   *app.Configs
 }
 
 // NewHealthyCheckService will create a healthy check service layer
-func NewHealthyCheckService(maxTimeOut time.Duration, conf *configs.Configs) HealthyCheckService {
+func NewHealthyCheckService(maxTimeOut time.Duration, conf *app.Configs) HealthyCheckService {
 	return &healthyCheckServiceImpl{
 		Caller: &lhttp.Caller{
 			Body:   nil,
 			Header: map[string]string{},
-			Client: &http.Client{Timeout: maxTimeOut},
+			Client: &http.Client{Timeout: maxTimeOut, Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			}},
 		},
 		Conf: conf,
 	}
@@ -41,7 +46,6 @@ func (service healthyCheckServiceImpl) Ping(req models.HealthyCheckRequest) (mod
 
 	service.Caller.SetURL(req.URL)
 	_, err := service.Caller.GET()
-
 	// after ping
 	resp.EndAt = time.Now()
 	if err != nil {
@@ -68,6 +72,7 @@ func (service *healthyCheckServiceImpl) HealthyCheckEndPointFromCSVFile(reader i
 	}
 	close(pool.ChannelJob)
 	<-pool.Done
+	pool.Result.EndAt = time.Now()
 	service.SendReport(pool.Result)
 
 	return pool.Result

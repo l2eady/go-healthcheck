@@ -52,9 +52,11 @@ go run main.go -filename example.csv -max_worker 100 -ping_timeout_in_second 2
 ## Deployment instructions ##
 
 ```bash
-go install -v .
+sh deployment.sh
 ```
-  
+
+the package will move to ${GOPATH}/bin/go-healthycheck with configs folder
+
 ## How to contact ##
 
 m.khemcharoen@gmail.com
