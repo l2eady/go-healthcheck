@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type HealthyCheckRequest struct {
 	URL string
@@ -8,7 +10,13 @@ type HealthyCheckRequest struct {
 
 type HealthyCheckResponse struct {
 	URL     string
-	Status  bool
+	IsSuccess  bool
 	StartAt time.Time
 	EndAt   time.Time
+}
+
+type HealthyCheckReport struct {
+	Data         []HealthyCheckResponse
+	CountSuccess int
+	CountFailure int
 }

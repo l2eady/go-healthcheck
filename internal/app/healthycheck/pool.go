@@ -11,7 +11,7 @@ type pool struct {
 	ChannelJob    chan models.HealthyCheckRequest
 	ChanelResult  chan models.HealthyCheckResponse
 	maxGoRoutines int
-	Results       []models.HealthyCheckResponse
+	Result        *models.HealthyCheckReport
 	HealthyCheckService
 }
 
@@ -21,7 +21,7 @@ func (h *healthyCheckServiceImpl) NewPool(maxGoRoutines int) *pool {
 		ChannelJob:          make(chan models.HealthyCheckRequest, maxGoRoutines),
 		ChanelResult:        make(chan models.HealthyCheckResponse, maxGoRoutines),
 		maxGoRoutines:       maxGoRoutines,
-		Results:             make([]models.HealthyCheckResponse, maxGoRoutines),
+		Result:              &models.HealthyCheckReport{},
 		HealthyCheckService: h,
 	}
 }
@@ -31,7 +31,6 @@ func (p *pool) Start() {
 	go func() {
 		defer close(p.ChanelResult)
 		wg := &sync.WaitGroup{}
-		fmt.Printf("Worker Pool spawning new goRoutines, total: [%d]\n", p.maxGoRoutines)
 		for i := 1; i <= p.maxGoRoutines; i++ {
 			wg.Add(1)
 			worker := &Worker{
@@ -42,17 +41,22 @@ func (p *pool) Start() {
 			// create new worker in new gorutine
 			go worker.Do(p.HealthyCheckService, wg)
 		}
-		fmt.Println("Worker Pool done spawning work goRoutines")
 		wg.Wait()
 	}()
+
 	p.collect()
 }
 
 func (p *pool) collect() {
 	go func() {
 		defer func() { p.Done <- true }()
-		for result := range p.ChanelResult {
-			p.Results = append(p.Results, result)
+		for jobResult := range p.ChanelResult {
+			p.Result.Data = append(p.Result.Data, jobResult)
+			if !jobResult.IsSuccess {
+				p.Result.CountFailure++
+				continue
+			}
+			p.Result.CountSuccess++
 		}
 	}()
 }

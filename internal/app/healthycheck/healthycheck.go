@@ -2,7 +2,6 @@ package healthycheck
 
 import (
 	"encoding/csv"
-	"fmt"
 	"go-healthcheck/internal/app/lhttp"
 	"go-healthcheck/internal/app/models"
 	"io"
@@ -12,8 +11,8 @@ import (
 )
 
 type HealthyCheckService interface {
-	Ping(req models.HealthyCheckRequest) (models.HealthyCheckResponse, error)
-	HealthyCheckEndPointFromCSVFile(io.Reader) ([]models.HealthyCheckResponse, error)
+	Ping(models.HealthyCheckRequest) (models.HealthyCheckResponse, error)
+	HealthyCheckEndPointFromCSVFile(io.Reader, int) *models.HealthyCheckReport
 }
 type healthyCheckServiceImpl struct {
 	Caller lhttp.HttpCaller
@@ -32,8 +31,9 @@ func NewHealthyCheckService(maxTimeOut time.Duration) HealthyCheckService {
 
 func (service healthyCheckServiceImpl) Ping(req models.HealthyCheckRequest) (models.HealthyCheckResponse, error) {
 	resp := models.HealthyCheckResponse{
-		URL:     req.URL,
-		StartAt: time.Now(),
+		URL:       req.URL,
+		StartAt:   time.Now(),
+		IsSuccess: false,
 	}
 
 	service.Caller.SetURL(req.URL)
@@ -42,18 +42,15 @@ func (service healthyCheckServiceImpl) Ping(req models.HealthyCheckRequest) (mod
 	// after ping
 	resp.EndAt = time.Now()
 	if err != nil {
-		fmt.Printf("Ping to %s failed\n", resp.URL)
-		resp.Status = false
 		return resp, err
 	}
-	resp.Status = true
-	fmt.Printf("Ping to %s successfuly\n", resp.URL)
+	resp.IsSuccess = true
 	return resp, nil
 }
 
-func (service *healthyCheckServiceImpl) HealthyCheckEndPointFromCSVFile(reader io.Reader) ([]models.HealthyCheckResponse, error) {
+func (service *healthyCheckServiceImpl) HealthyCheckEndPointFromCSVFile(reader io.Reader, maxWorker int) *models.HealthyCheckReport {
 	csvReader := csv.NewReader(reader)
-	pool := service.NewPool(100)
+	pool := service.NewPool(maxWorker)
 	pool.Start()
 	for {
 		record, err := csvReader.Read()
@@ -61,18 +58,12 @@ func (service *healthyCheckServiceImpl) HealthyCheckEndPointFromCSVFile(reader i
 			if err == io.EOF {
 				break
 			}
-			// switch err {
-			// case io.EOF:
-			// 	break
-			// default:
 			log.Printf("Read file error: %#v \n", err)
-			return nil, err
-			// }
+			continue
 		}
-		fmt.Println("WTF")
 		pool.ChannelJob <- models.HealthyCheckRequest{URL: record[0]}
 	}
 	close(pool.ChannelJob)
 	<-pool.Done
-	return pool.Results, nil
+	return pool.Result
 }
