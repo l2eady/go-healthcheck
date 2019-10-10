@@ -35,7 +35,7 @@ http://docs.google.com,
 go clean -testcache && go test ./... -coverprofile=coverage.out & go tool cover -html=coverage.out
 ```
 
-## Running instructions ##
+## Running instructions (local) ##
 
 |       Param Name       | Required |  Type  | Default Value |              Description               |
 | :--------------------: | :------: | :----: | :-----------: | :------------------------------------: |
@@ -54,8 +54,13 @@ go run main.go -filename example.csv -max_worker 100 -ping_timeout_in_second 2
 ```bash
 sh deployment.sh
 ```
-
 the package will move to ${GOPATH}/bin/go-healthycheck with configs folder
+
+## Running instructions (binary package after deploy) ##
+cd $GOPATH/bin/go-healthycheck
+```sh
+./go-healthycheck -filename <your_file> -max_worker 1000
+```
 
 ## How to contact ##
 
