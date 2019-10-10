@@ -19,7 +19,6 @@ var (
 func main() {
 	state := flag.String("state", "local", "set working environment")
 	configPath := flag.String("config", "configs", "set configs path, default as: 'configs'")
-
 	fileName := flag.String("filename", "example.csv", "csv filename for healthycheck")
 	pingTimeOut := flag.Int64("ping_timeout_in_second", 2, "http timeout for ping")
 	maxWorker := flag.Int("max_worker", 50, "maximum of worker for ping service")

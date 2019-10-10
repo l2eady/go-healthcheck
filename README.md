@@ -37,11 +37,13 @@ go clean -testcache && go test ./... -coverprofile=coverage.out & go tool cover 
 
 ## Running instructions ##
 
-|       Param Name       | Required |  Type  | Default Value |               Description              |
-|:----------------------:|:--------:|:------:|:-------------:|:--------------------------------------:|
+|       Param Name       | Required |  Type  | Default Value |              Description               |
+| :--------------------: | :------: | :----: | :-----------: | :------------------------------------: |
 |        filename        |   true   | string |  example.csv  |     csv filename for healthy check     |
-| ping_timeout_in_second |   false  |   int  |       2       |      HTTP Timeout for ping domain      |
-|       max_worker       |   false  |   int  |       50      | Maximum of worker for concurrency ping |
+| ping_timeout_in_second |  false   |  int   |       2       |      HTTP Timeout for ping domain      |
+|       max_worker       |  false   |  int   |      50       | Maximum of worker for concurrency ping |
+|         stage          |  false   | string |     local     |        set working environment         |
+
 
 ```bash
 go run main.go -filename example.csv -max_worker 100 -ping_timeout_in_second 2
