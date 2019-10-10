@@ -3,6 +3,7 @@ package healthycheck
 import (
 	"errors"
 	"fmt"
+	"go-healthcheck/configs"
 	"go-healthcheck/internal/app/lhttp/mocks"
 	"go-healthcheck/internal/app/models"
 	"strings"
@@ -47,8 +48,10 @@ func TestReadCSVExpectPingSuccessReturnReportSuccess(t *testing.T) {
 	url := "https://linecorp.com"
 	data := fmt.Sprintf(`%s,line company`, url)
 	reader := strings.NewReader(data)
+	mockConf := &configs.Configs{}
 	mockCaller := &mocks.MockLHTTPCaller{MockGETReturnErr: nil}
-	checker := healthyCheckServiceImpl{Caller: mockCaller}
+	checker := healthyCheckServiceImpl{Caller: mockCaller,
+		Conf: mockConf}
 	report := checker.HealthyCheckEndPointFromCSVFile(reader, 1)
 	expectTotalData := 1
 	expectTotalSuccess := 1
@@ -63,9 +66,23 @@ func TestReadCSVExpectPingSuccessReturnReportSuccess(t *testing.T) {
 	if firstReport.URL != url {
 		t.Errorf("Expected %v, but got %v", url, firstReport.URL)
 	}
-	if report.CountSuccess != expectTotalSuccess {
-		t.Errorf("Expected %v, but got %v", expectTotalSuccess, report.CountSuccess)
+	if report.TotalSuccess != expectTotalSuccess {
+		t.Errorf("Expected %v, but got %v", expectTotalSuccess, report.TotalSuccess)
 	}
+}
+
+func TestSendReportExpectSendFailedReturnFailed(t *testing.T) {
+	mockConf := &configs.Configs{}
+	expectErr := errors.New("http request timeout")
+	mockCaller := &mocks.MockLHTTPCaller{MockGETReturnErr: nil, MockPOSTReturnErr: expectErr}
+	checker := healthyCheckServiceImpl{Caller: mockCaller,
+		Conf: mockConf}
+
+	err := checker.SendReport(&models.HealthyCheckReport{})
+	if err == nil {
+		t.Errorf("Expected %v, but got %v", expectErr, err)
+	}
+
 }
 
 func TestReadCSVExpectPingFailedReturnReportFailed(t *testing.T) {
@@ -73,7 +90,9 @@ func TestReadCSVExpectPingFailedReturnReportFailed(t *testing.T) {
 	data := fmt.Sprintf(`%s,line company`, url)
 	reader := strings.NewReader(data)
 	mockCaller := &mocks.MockLHTTPCaller{MockGETReturnErr: errors.New("request timeout")}
-	checker := healthyCheckServiceImpl{Caller: mockCaller}
+	mockConf := &configs.Configs{}
+	checker := healthyCheckServiceImpl{Caller: mockCaller, Conf: mockConf}
+
 	report := checker.HealthyCheckEndPointFromCSVFile(reader, 1)
 	expectTotalData := 1
 	exppectTotalFail := 1
@@ -87,8 +106,8 @@ func TestReadCSVExpectPingFailedReturnReportFailed(t *testing.T) {
 	if firstReport.URL != url {
 		t.Errorf("Expected %v, but got %v", url, firstReport.URL)
 	}
-	if report.CountFailure != exppectTotalFail {
-		t.Errorf("Expected %v, but got %v", exppectTotalFail, report.CountFailure)
+	if report.TotalFailure != exppectTotalFail {
+		t.Errorf("Expected %v, but got %v", exppectTotalFail, report.TotalFailure)
 	}
 }
 
@@ -97,7 +116,8 @@ func TestReadCSVExpectReadErrorReturnReport(t *testing.T) {
 	data := fmt.Sprintf(`%s,line "company`, url)
 	reader := strings.NewReader(data)
 	mockCaller := &mocks.MockLHTTPCaller{MockGETReturnErr: nil}
-	checker := healthyCheckServiceImpl{Caller: mockCaller}
+	mockConf := &configs.Configs{}
+	checker := healthyCheckServiceImpl{Caller: mockCaller, Conf: mockConf}
 	report := checker.HealthyCheckEndPointFromCSVFile(reader, 1)
 	expectTotalData := 0
 	if len(report.Data) != expectTotalData {
@@ -107,7 +127,7 @@ func TestReadCSVExpectReadErrorReturnReport(t *testing.T) {
 }
 
 func TestNewHealthyCheckServiceExpectServiceReturnService(t *testing.T) {
-	service := NewHealthyCheckService(time.Second)
+	service := NewHealthyCheckService(time.Second, nil)
 	_, ok := service.(HealthyCheckService)
 	if !ok {
 		t.Errorf("Expected true, but got %v", ok)

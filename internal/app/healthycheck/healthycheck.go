@@ -2,6 +2,7 @@ package healthycheck
 
 import (
 	"encoding/csv"
+	"go-healthcheck/configs"
 	"go-healthcheck/internal/app/lhttp"
 	"go-healthcheck/internal/app/models"
 	"io"
@@ -16,16 +17,18 @@ type HealthyCheckService interface {
 }
 type healthyCheckServiceImpl struct {
 	Caller lhttp.HttpCaller
+	Conf   *configs.Configs
 }
 
 // NewHealthyCheckService will create a healthy check service layer
-func NewHealthyCheckService(maxTimeOut time.Duration) HealthyCheckService {
+func NewHealthyCheckService(maxTimeOut time.Duration, conf *configs.Configs) HealthyCheckService {
 	return &healthyCheckServiceImpl{
 		Caller: &lhttp.Caller{
 			Body:   nil,
 			Header: map[string]string{},
 			Client: &http.Client{Timeout: maxTimeOut},
 		},
+		Conf: conf,
 	}
 }
 
@@ -65,5 +68,31 @@ func (service *healthyCheckServiceImpl) HealthyCheckEndPointFromCSVFile(reader i
 	}
 	close(pool.ChannelJob)
 	<-pool.Done
+	service.SendReport(pool.Result)
+
 	return pool.Result
+}
+func (service *healthyCheckServiceImpl) SendReport(report *models.HealthyCheckReport) error {
+	type reportRequest struct {
+		TotalWebsites         int   `json:"total_websites"`
+		TotalSuccess          int   `json:"success"`
+		TotalFailure          int   `json:"failure"`
+		TotalTimeInNanoSecond int64 `json:"total_time"`
+	}
+	req := reportRequest{
+		TotalWebsites:         len(report.Data),
+		TotalSuccess:          report.TotalSuccess,
+		TotalFailure:          report.TotalFailure,
+		TotalTimeInNanoSecond: report.TotalTimeUsedInNano(),
+	}
+
+	url := service.Conf.ReportService.Address + service.Conf.ReportService.ReportEndPoint
+	service.Caller.SetURL(url)
+	service.Caller.SetBody(req)
+	service.Caller.SetHeader(map[string]string{"Authorization": service.Conf.ReportService.AccessToken})
+	_, err := service.Caller.POST()
+	if err != nil {
+		log.Printf("the system can't send the report, err : %v\n", err)
+	}
+	return err
 }

@@ -32,7 +32,7 @@ http://docs.google.com,
 ## Testing instructions ##
 
 ```bash
-go clean -testcache && go test ./... -coverprofile=.coverage.out & go tool cover -html=coverage.out
+go clean -testcache && go test ./... -coverprofile=coverage.out & go tool cover -html=coverage.out
 ```
 
 ## Running instructions ##

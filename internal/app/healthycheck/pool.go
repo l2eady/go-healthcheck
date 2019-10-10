@@ -53,10 +53,10 @@ func (p *pool) collect() {
 		for jobResult := range p.ChanelResult {
 			p.Result.Data = append(p.Result.Data, jobResult)
 			if !jobResult.IsSuccess {
-				p.Result.CountFailure++
+				p.Result.TotalFailure++
 				continue
 			}
-			p.Result.CountSuccess++
+			p.Result.TotalSuccess++
 		}
 	}()
 }

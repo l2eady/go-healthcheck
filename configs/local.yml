@@ -1,0 +1,4 @@
+heathycheckreport_service:
+  address: https://hiring-challenge.appspot.com
+  report_endpoint: /healthcheck/report
+  access_token: Bearer eyJhbGciOiJIUzI1NiJ9.DvbmwH87OjXNkjfrL9bBA0JbnFwrUaLgbc349_jKayh4Jv-aSdQeX_gJE8gLuUHd0AFo8Z9JJgBCU1OI8QZFhtWW8IxQkwpWIdv-2B4PCTRbWN59jF5_EdXTkX_dFFEqWz-4WlkZ_s1deb4ttov8o_tyATt1fdLCgMHj4aBd1m4.RAfozKzyhkFiGPp46ez_36Fg-X-6nlHwjzH3Q3wjJJg

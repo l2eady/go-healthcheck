@@ -9,14 +9,20 @@ type HealthyCheckRequest struct {
 }
 
 type HealthyCheckResponse struct {
-	URL     string
-	IsSuccess  bool
-	StartAt time.Time
-	EndAt   time.Time
+	URL       string
+	IsSuccess bool
+	StartAt   time.Time
+	EndAt     time.Time
 }
 
 type HealthyCheckReport struct {
+	StartAt      time.Time
 	Data         []HealthyCheckResponse
-	CountSuccess int
-	CountFailure int
+	TotalSuccess int
+	TotalFailure int
+	EndAt        time.Time
+}
+
+func (h HealthyCheckReport) TotalTimeUsedInNano() int64 {
+	return h.EndAt.Sub(h.StartAt).Nanoseconds()
 }
